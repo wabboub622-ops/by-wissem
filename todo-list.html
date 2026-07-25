@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قائمة مهامي</title>
+
+<style>
+  /* ============================================
+     الخطوط: خط للعناوين وخط للنصوص
+  ============================================ */
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Kalam:wght@700&display=swap');
+
+  /* ============================================
+     نظام الألوان (كل الألوان في مكان واحد)
+  ============================================ */
+  :root {
+    --bg: #F3F0E7;          /* لون خلفية يشبه ورقة دفتر */
+    --paper: #FFFFFF;       /* لون بطاقة المهام */
+    --ink: #2E2A26;         /* لون النص الأساسي */
+    --accent: #5B7B7A;      /* أخضر مطفي - لون التركيز */
+    --accent-2: #C97B5A;    /* برتقالي دافئ - للتفاصيل الصغيرة */
+    --line: #E4DFD3;        /* لون الخطوط الفاصلة */
+    --done: #A9A398;        /* لون النص عند إنجاز المهمة */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: 100% 42px;
+    font-family: 'Cairo', sans-serif;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .sheet {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  /* عنوان الصفحة بخط "مكتوب باليد" */
+  h1 {
+    font-family: 'Kalam', cursive;
+    font-size: 2.1rem;
+    margin: 0 0 4px;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    color: var(--done);
+    font-size: 0.9rem;
+    margin: 0 0 28px;
+  }
+
+  /* ============================================
+     صندوق إضافة مهمة جديدة
+  ============================================ */
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  #taskInput {
+    flex: 1;
+    padding: 14px 16px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    background: var(--paper);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #taskInput:focus {
+    border-color: var(--accent);
+  }
+
+  #addBtn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0 22px;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+
+  #addBtn:hover { background: #4a6867; }
+  #addBtn:active { transform: scale(0.96); }
+
+  /* ============================================
+     قائمة المهام
+  ============================================ */
+  #taskList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: appear 0.25s ease;
+  }
+
+  @keyframes appear {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .task .checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+  }
+
+  .task.done .checkbox {
+    background: var(--accent);
+  }
+
+  .task .checkbox::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: white;
+    display: none;
+  }
+
+  .task.done .checkbox::after { display: block; }
+
+  .task span.text {
+    flex: 1;
+    font-size: 1rem;
+    word-break: break-word;
+  }
+
+  .task.done span.text {
+    text-decoration: line-through;
+    color: var(--done);
+  }
+
+  .task .delete {
+    background: none;
+    border: none;
+    color: var(--accent-2);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+
+  /* رسالة تظهر عندما تكون القائمة فارغة */
+  .empty-msg {
+    text-align: center;
+    color: var(--done);
+    padding: 30px 0;
+    font-size: 0.95rem;
+  }
+
+  /* عداد المهام أسفل الصفحة */
+  #counter {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: var(--done);
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <h1>✎ قائمة مهامي</h1>
+  <p class="subtitle">أضيفي مهامك واضغطي على الدائرة عند الإنجاز</p>
+
+  <!-- صندوق إضافة مهمة -->
+  <div class="add-row">
+    <input type="text" id="taskInput" placeholder="اكتبي مهمة جديدة...">
+    <button id="addBtn">إضافة</button>
+  </div>
+
+  <!-- قائمة المهام تُبنى هنا بواسطة JavaScript -->
+  <ul id="taskList"></ul>
+
+  <p id="counter"></p>
+</div>
+
+<script>
+  // ============================================
+  // 1) نخزّن المهام في مصفوفة (array)
+  //    كل مهمة عبارة عن كائن (object) فيه: النص + هل أُنجزت
+  // ============================================
+  let tasks = [];
+
+  // نجيب العناصر من الصفحة عشان نتعامل معها
+  const taskInput = document.getElementById('taskInput');
+  const addBtn    = document.getElementById('addBtn');
+  const taskList  = document.getElementById('taskList');
+  const counter   = document.getElementById('counter');
+
+  // ============================================
+  // 2) دالة "ارسمي القائمة من جديد"
+  //    كل مرة تتغيّر فيها المهام، نمسح القائمة ونرسمها من جديد
+  // ============================================
+  function render() {
+    taskList.innerHTML = ''; // نفرّغ القائمة القديمة
+
+    if (tasks.length === 0) {
+      taskList.innerHTML = '<p class="empty-msg">لا توجد مهام بعد — أضيفي أول مهمة! 🌿</p>';
+      counter.textContent = '';
+      return;
+    }
+
+    tasks.forEach((task, index) => {
+      const li = document.createElement('li');
+      li.className = 'task' + (task.done ? ' done' : '');
+
+      li.innerHTML = `
+        <button class="checkbox" data-index="${index}"></button>
+        <span class="text">${task.text}</span>
+        <button class="delete" data-index="${index}">✕</button>
+      `;
+
+      taskList.appendChild(li);
+    });
+
+    // نحسب كم مهمة منجزة من الإجمالي
+    const doneCount = tasks.filter(t => t.done).length;
+    counter.textContent = `${doneCount} من ${tasks.length} مهمة منجزة`;
+  }
+
+  // ============================================
+  // 3) إضافة مهمة جديدة
+  // ============================================
+  function addTask() {
+    const value = taskInput.value.trim(); // نشيل الفراغات الزايدة
+    if (value === '') return; // ما نضيف مهمة فاضية
+
+    tasks.push({ text: value, done: false });
+    taskInput.value = ''; // نفرغ خانة الكتابة
+    taskInput.focus();
+    render();
+  }
+
+  addBtn.addEventListener('click', addTask);
+
+  // نضيف المهمة أيضاً عند الضغط على Enter
+  taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  // ============================================
+  // 4) التعامل مع الضغط على "تم الإنجاز" أو "حذف"
+  //    نستخدم event delegation: نستمع على القائمة كلها
+  //    بدل ما نستمع على كل مهمة لحالها
+  // ============================================
+  taskList.addEventListener('click', (e) => {
+    const index = e.target.dataset.index;
+    if (index === undefined) return;
+
+    if (e.target.classList.contains('checkbox')) {
+      tasks[index].done = !tasks[index].done; // نعكس الحالة
+    }
+
+    if (e.target.classList.contains('delete')) {
+      tasks.splice(index, 1); // نحذف المهمة من المصفوفة
+    }
+
+    render();
+  });
+
+  // نرسم القائمة أول مرة (تظهر رسالة "لا توجد مهام")
+  render();
+</script>
+
+</body>
+</html>
