@@ -254,7 +254,11 @@
     // نحسب كم مهمة منجزة من الإجمالي
     const doneCount = tasks.filter(t => t.done).length;
     counter.textContent = `${doneCount} من ${tasks.length} مهمة منجزة`;
-  }
+    saveTasks();
+  } function saveTasks() {
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
 
   // ============================================
   // 3) إضافة مهمة جديدة
@@ -295,8 +299,11 @@
 
     render();
   });
-
-  // نرسم القائمة أول مرة (تظهر رسالة "لا توجد مهام")
+    // نرسم القائمة أول مرة (تظهر رسالة "لا توجد مهام")
+const saved = localStorage.getItem('tasks');
+if (saved) {
+  tasks = JSON.parse(saved);
+}
   render();
 </script>
 
